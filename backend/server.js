@@ -86,6 +86,35 @@ app.post("/api/create", async (req, res) => {
   }
 });
 
+// GET route to handle the redirection
+app.get("/:shortId", async (req, res) => {
+  try {
+    const { shortId } = req.params;
+
+    // Find the URL and increment the click count in one operation
+    const urlEntry = await Url.findOneAndUpdate(
+      { shortId },
+      { $inc: { clicks: 1 } },
+    );
+
+    if (urlEntry) {
+      // Redirect to the original long URL
+      return res.redirect(urlEntry.originalUrl);
+    }
+
+    // Friendly 404 if the shortId doesn't exist
+    return res.status(404).send(`
+      <div style="text-align:center; font-family:sans-serif; margin-top:50px;">
+        <h1>404: Link not found</h1>
+        <p>This shortened link does not exist in our database.</p>
+      </div>
+    `);
+  } catch (error) {
+    console.error("Redirect error:", error);
+    res.status(500).send("Server Error...");
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is listening: http://localhost:${PORT}`);
 });
