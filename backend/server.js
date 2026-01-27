@@ -14,6 +14,23 @@ const PORT = process.env.PORT || 8080;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+//utility fuctions
+const formatUrl = (url) => {
+  let cleanedUrl = url.trim();
+
+  // Remove trailing slash if it exists (e.g., example.com/ -> example.com)
+  if (cleanedUrl.endsWith("/")) {
+    cleanedUrl = cleanedUrl.slice(0, -1);
+  }
+
+  // If user didn't provide a protocol, default to https
+  if (!cleanedUrl.startsWith("http://") && !cleanedUrl.startsWith("https://")) {
+    cleanedUrl = `https://${cleanedUrl}`;
+  }
+
+  return cleanedUrl;
+};
+
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
@@ -30,8 +47,11 @@ app.post("/api/create", async (req, res) => {
         .json({ message: "Please provide a valid URL", success: false });
     }
 
+    // Clean and Format the URL
+    const formattedUrl = formatUrl(url);
+
     // 2. Check if the URL already exists in our database
-    let existingUrl = await Url.findOne({ originalUrl: url });
+    let existingUrl = await Url.findOne({ originalUrl: formattedUrl });
 
     if (existingUrl) {
       return res.json({
@@ -47,7 +67,7 @@ app.post("/api/create", async (req, res) => {
 
     // 4. Create and save the new URL document
     const newUrl = new Url({
-      originalUrl: url,
+      originalUrl: formattedUrl,
       shortId: shortId,
     });
 
