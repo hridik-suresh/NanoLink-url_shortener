@@ -1,8 +1,13 @@
 import express from "express";
-const app = express();
+import dotenv from "dotenv";
+dotenv.config();
 import { nanoid } from "nanoid";
+import connectDB from "./src/config/db.js";
 
-const PORT = 3000;
+const app = express();
+connectDB();
+
+const PORT = process.env.PORT || 8080;
 
 // Middleware
 app.use(express.json());
