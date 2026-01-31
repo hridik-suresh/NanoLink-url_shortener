@@ -1,13 +1,23 @@
 import express from "express";
-import { createShortUrl, redirectUrl, updateUrlAlias } from "../controllers/urlController.js";
-import { optionalProtect, protect } from "../middleware/authMiddleware.js";
+import {
+  createShortUrl,
+  updateUrlAlias,
+  getUserUrls,
+} from "../controllers/urlController.js";
+import { protect, optionalProtect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/create", optionalProtect, createShortUrl); // Endpoint to create a short URL
+// Create - works for guests or logged-in users
+// POST /api/url/create
+router.post("/create", optionalProtect, createShortUrl);
 
-router.patch("/url/:id", protect, updateUrlAlias);// Edit an existing URL's alias
+// Fetch User Links - strictly for logged-in users
+// GET /api/url/my-links
+router.get("/my-links", protect, getUserUrls);
 
-router.get("/:shortId", redirectUrl); // Endpoint to redirect to the original URL
+// Update Alias - strictly for the link owner
+// PATCH /api/url/:id
+router.patch("/:id", protect, updateUrlAlias);
 
 export default router;

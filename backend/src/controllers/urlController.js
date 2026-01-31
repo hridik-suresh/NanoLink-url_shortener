@@ -6,7 +6,7 @@ const baseUrl =
   process.env.BASE_URL || `http://localhost:${process.env.PORT || 8080}`;
 
 // Controller to handle URL shortening-----------------------------------------------
-// post /api/create
+// post /api/url/create
 export const createShortUrl = async (req, res) => {
   try {
     const { url, customAlias } = req.body; // Add customAlias here
@@ -103,6 +103,33 @@ export const updateUrlAlias = async (req, res) => {
     });
   } catch (error) {
     console.log("Error updating URL alias:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// @desc    Get all URLs created by the logged-in user--------------------------------------
+// @route   GET /api/url/my-links
+export const getUserUrls = async (req, res) => {
+  try {
+    // req.user._id is available thanks to the 'protect' middleware
+    const urls = await Url.find({ user: req.user._id }).sort({ createdAt: -1 });
+
+    if (urls.length === 0) {
+      return res
+        .status(200)
+        .json({
+          message: "You have not created any shortened URLs yet.",
+          urls: [],
+        });
+    }
+
+    res.status(200).json({
+      success: true,
+      count: urls.length,
+      urls,
+    });
+  } catch (error) {
+    console.error("Error fetching user URLs:", error);
     res.status(500).json({ message: "Server Error" });
   }
 };

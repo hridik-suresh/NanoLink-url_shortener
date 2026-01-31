@@ -4,8 +4,8 @@ dotenv.config();
 import cors from "cors";
 import connectDB from "./src/config/db.js";
 import urlRoutes from "./src/routes/urlRoutes.js";
+import { redirectUrl } from "./src/controllers/urlController.js";
 import authRoutes from "./src/routes/authRoutes.js";
-
 
 const app = express();
 
@@ -19,9 +19,13 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use("/api", urlRoutes); // API routes
-app.use("/api/auth", authRoutes); // Auth routes
-app.use("/", urlRoutes); // Redirect routes
+
+//  Auth Routes
+app.use("/api/auth", authRoutes);
+//  URL Management Routes
+app.use("/api/url", urlRoutes);
+//  The Redirect Route
+app.get("/:shortId", redirectUrl);
 
 app.listen(PORT, () =>
   console.log(`Server running on port ${PORT}: http://localhost:${PORT}`),
