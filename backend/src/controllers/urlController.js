@@ -46,6 +46,7 @@ export const createShortUrl = async (req, res) => {
       success: true,
     });
   } catch (error) {
+    console.error("Error creating short URL:", error);
     res.status(500).json({ message: "Server Error" });
   }
 };
