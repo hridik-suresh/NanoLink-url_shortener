@@ -5,7 +5,11 @@ const urlSchema = new mongoose.Schema(
     originalUrl: { type: String, required: true },
     shortId: { type: String, required: true, index: true, unique: true },
     clicks: { type: Number, default: 0, required: true },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: false, // False allows Guest users to still shorten links
+    },
   },
   { timestamps: true },
 );
