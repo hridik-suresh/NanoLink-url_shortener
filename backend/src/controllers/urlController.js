@@ -2,51 +2,107 @@ import { nanoid } from "nanoid";
 import Url from "../models/Url.js";
 import { formatUrl } from "../utils/urlHelper.js";
 
-const PORT = process.env.PORT || 8080;
-const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+const baseUrl =
+  process.env.BASE_URL || `http://localhost:${process.env.PORT || 8080}`;
 
 // Controller to handle URL shortening-----------------------------------------------
 // post /api/create
 export const createShortUrl = async (req, res) => {
   try {
-    const { url } = req.body;
-    if (!url) {
-      return res.status(400).json({ message: "Please provide a URL" });
-    }
+    const { url, customAlias } = req.body; // Add customAlias here
+    if (!url) return res.status(400).json({ message: "Please provide a URL" });
 
     const formattedUrl = formatUrl(url);
-    // Check if THIS specific user already shortened this URL
-    // (Guests check for links where user is null)
     const userId = req.user ? req.user._id : null;
-    let existingUrl = await Url.findOne({
-      originalUrl: formattedUrl,
-      user: userId,
-    });
 
-    if (existingUrl) {
-      return res.json({
-        shortUrl: `${baseUrl}/${existingUrl.shortId}`,
-        message: "URL already in your list",
-        success: true,
+    // 1. If NO custom alias is provided, check for existing link to avoid duplicates
+    if (!customAlias) {
+      const existingUrl = await Url.findOne({
+        originalUrl: formattedUrl,
+        user: userId,
       });
+      if (existingUrl) {
+        return res.json({
+          shortUrl: `${baseUrl}/${existingUrl.shortId}`,
+          message: "URL already in your list",
+          success: true,
+        });
+      }
     }
 
-    const shortId = nanoid(7);
+    // 2. Determine the shortId (Custom or Random)
+    let shortId = customAlias ? customAlias.trim() : nanoid(7);
+
+    // 3. If custom, check if that alias is already taken by ANYONE
+    if (customAlias) {
+      const aliasExists = await Url.findOne({ shortId });
+      if (aliasExists) {
+        return res.status(400).json({ message: "This alias is already taken" });
+      }
+    }
+
     const newUrl = new Url({
       originalUrl: formattedUrl,
-      shortId: shortId,
-      user: userId, // Will be the ID or null
+      shortId,
+      user: userId,
     });
-
     await newUrl.save();
 
     res.status(201).json({
-      message: "Success!",
-      shortUrl: `${baseUrl}/${shortId}`,
       success: true,
+      shortUrl: `${baseUrl}/${shortId}`,
     });
   } catch (error) {
-    console.error("Error creating short URL:", error);
+    console.log("Error creating short URL:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// @desc    Update custom alias for an existing URL---------------------------------------------
+// @route   PATCH /api/url/:id
+export const updateUrlAlias = async (req, res) => {
+  try {
+    const { newAlias } = req.body;
+    const { id } = req.params; // The MongoDB _id of the URL entry
+
+    if (!newAlias) {
+      return res.status(400).json({ message: "Please provide a new alias" });
+    }
+
+    // 1. Validation: No spaces or special characters (Alphanumeric and dashes only)
+    const aliasRegex = /^[a-zA-Z0-9-_]+$/;
+    if (!newAlias || !aliasRegex.test(newAlias)) {
+      return res.status(400).json({
+        message: "Invalid alias. Use only letters, numbers, and dashes.",
+      });
+    }
+
+    // 2. Check if the new alias is already in use by anyone
+    const aliasExists = await Url.findOne({ shortId: newAlias });
+    if (aliasExists) {
+      return res.status(400).json({ message: "This alias is already taken" });
+    }
+
+    // 3. Find the URL and ensure it belongs to the logged-in user
+    const url = await Url.findOne({ _id: id, user: req.user._id });
+
+    if (!url) {
+      return res
+        .status(404)
+        .json({ message: "Link not found or unauthorized" });
+    }
+
+    // 4. Update the alias
+    url.shortId = newAlias;
+    await url.save();
+
+    res.json({
+      success: true,
+      message: "Alias updated successfully!",
+      shortUrl: `${baseUrl}/${url.shortId}`,
+    });
+  } catch (error) {
+    console.log("Error updating URL alias:", error);
     res.status(500).json({ message: "Server Error" });
   }
 };
@@ -59,7 +115,7 @@ export const redirectUrl = async (req, res) => {
 
     // 1. Find the URL and increment the click count in one operation
     const urlEntry = await Url.findOneAndUpdate(
-      { shortId },
+      { shortId: shortId.trim() },
       { $inc: { clicks: 1 } },
       { new: true }, // Return the updated document
     );
