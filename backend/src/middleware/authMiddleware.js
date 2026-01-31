@@ -1,35 +1,44 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
+// USE THIS: For private pages (Dashboard, Delete Link, etc.)
 export const protect = async (req, res, next) => {
   let token;
 
-  // 1. Check if token exists in the Headers (Bearer <token>)
   if (
     req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
+    req.headers.authorization?.startsWith("Bearer")
   ) {
     try {
-      // Get token from header (split "Bearer <token>" and take the second part)
       token = req.headers.authorization.split(" ")[1];
-
-      // 2. Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      // 3. Find user by ID (decoded from token) and attach to the request object
-      // We exclude the password for safety
       req.user = await User.findById(decoded.id).select("-password");
-
-      // Move to the next function (the Controller)
-      next();
+      return next(); // SUCCESS: Exit the middleware and go to controller
     } catch (error) {
-      console.error("Auth Middleware Error:", error);
-      res.status(401).json({ message: "Not authorized, token failed" });
+      return res.status(401).json({ message: "Not authorized, token failed" });
     }
   }
 
-  // 4. If no token at all
-  if (!token) {
-    res.status(401).json({ message: "Not authorized, no token" });
+  // If no token was found
+  res.status(401).json({ message: "Not authorized, no token" });
+};
+
+// USE THIS: For the "Shorten URL" route (Guest + User support)
+export const optionalProtect = async (req, res, next) => {
+  if (
+    req.headers.authorization &&
+    req.headers.authorization?.startsWith("Bearer")
+  ) {
+    try {
+      const token = req.headers.authorization.split(" ")[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.id).select("-password");
+    } catch (error) {
+      // Token was bad/expired, so we just treat them as a guest
+      req.user = null;
+    }
+  } else {
+    req.user = null; // No token, definitely a guest
   }
+  next();
 };

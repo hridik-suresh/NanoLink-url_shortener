@@ -3,56 +3,50 @@ import Url from "../models/Url.js";
 import { formatUrl } from "../utils/urlHelper.js";
 
 const PORT = process.env.PORT || 8080;
+const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
 
 // Controller to handle URL shortening-----------------------------------------------
 // post /api/create
 export const createShortUrl = async (req, res) => {
   try {
     const { url } = req.body;
-
-    // 1. Basic Validation
     if (!url) {
-      return res
-        .status(400)
-        .json({ message: "Please provide a valid URL", success: false });
+      return res.status(400).json({ message: "Please provide a URL" });
     }
 
-    // Clean and Format the URL
     const formattedUrl = formatUrl(url);
-
-    // 2. Check if the URL already exists in our database
-    let existingUrl = await Url.findOne({ originalUrl: formattedUrl });
+    // Check if THIS specific user already shortened this URL
+    // (Guests check for links where user is null)
+    const userId = req.user ? req.user._id : null;
+    let existingUrl = await Url.findOne({
+      originalUrl: formattedUrl,
+      user: userId,
+    });
 
     if (existingUrl) {
       return res.json({
-        message: "URL already shortened",
-        shortUrl: `http://localhost:${PORT}/${existingUrl.shortId}`,
-        shortId: existingUrl.shortId,
+        shortUrl: `${baseUrl}/${existingUrl.shortId}`,
+        message: "URL already in your list",
         success: true,
       });
     }
 
-    // 3. Generate a unique shortId
     const shortId = nanoid(7);
-
-    // 4. Create and save the new URL document
     const newUrl = new Url({
       originalUrl: formattedUrl,
       shortId: shortId,
+      user: userId, // Will be the ID or null
     });
 
     await newUrl.save();
 
-    // 5. Send back the response
     res.status(201).json({
       message: "Success!",
-      shortUrl: `http://localhost:${PORT}/${shortId}`,
-      shortId: shortId,
+      shortUrl: `${baseUrl}/${shortId}`,
       success: true,
     });
   } catch (error) {
-    console.error("Error creating short URL:", error);
-    res.status(500).json({ message: "Internal Server Error", success: false });
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
@@ -66,6 +60,7 @@ export const redirectUrl = async (req, res) => {
     const urlEntry = await Url.findOneAndUpdate(
       { shortId },
       { $inc: { clicks: 1 } },
+      { new: true }, // Return the updated document
     );
 
     if (urlEntry) {
@@ -75,11 +70,11 @@ export const redirectUrl = async (req, res) => {
 
     // Friendly 404 if the shortId doesn't exist
     return res.status(404).send(`
-      <div style="text-align:center; font-family:sans-serif; margin-top:50px;">
-        <h1>404: Link not found</h1>
-        <p>This shortened link does not exist in our database.</p>
-      </div>
-    `);
+    <div style="text-align:center; font-family:sans-serif; margin-top:50px;">
+      <h1>404: Link not found</h1>
+      <p>This shortened link does not exist in our database.</p>
+    </div>
+`);
   } catch (error) {
     console.error("Redirect error:", error);
     res.status(500).send("Server Error...");
