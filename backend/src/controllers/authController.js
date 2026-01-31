@@ -33,3 +33,27 @@ export const register = async (req, res) => {
     res.status(500).json({ message: "Server error during registration" });
   }
 };
+
+// @desc    Login user
+// @route   POST /api/auth/login
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // 1. Find user & explicitly select the password (since we hid it in the model)
+    const user = await User.findOne({ email }).select("+password");
+
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(401).json({ message: "Invalid email or credentials" });
+    }
+
+    // 2. Send back token
+    res.status(200).json({
+      success: true,
+      token: signToken(user._id),
+      user: { id: user._id, name: user.name, email: user.email },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error during login" });
+  }
+};
