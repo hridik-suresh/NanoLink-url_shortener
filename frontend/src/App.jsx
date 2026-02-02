@@ -2,12 +2,12 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
+import Register from "./pages/Register";
 
 
 function App() {
   return (
     <Router>
-      
       <div className="min-h-screen flex flex-col bg-white font-sans selection:bg-primary/20 selection:text-primary">
         {/* Navigation Bar */}
         <Navbar />
@@ -15,6 +15,7 @@ function App() {
         <main className="grow w-full max-w-7xl mx-auto px-6 mb-20">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/register" element={<Register />} />
             
 
             {/* Fallback for 404 */}
