@@ -48,7 +48,7 @@ const Home = () => {
           </div>
 
           <div className="flex flex-col md:flex-row gap-5">
-            <div className="flex-grow space-y-2 text-left">
+            <div className="grow space-y-2 text-left">
               <label className="text-xs font-bold uppercase tracking-widest text-secondary ml-1 flex justify-between">
                 Custom Alias (Optional)
                 <span className="text-[10px] lowercase text-primary/60 italic font-normal">
@@ -72,7 +72,7 @@ const Home = () => {
             <div className="flex flex-col justify-end">
               <button
                 type="submit"
-                className="bg-primary hover:bg-primary-dark text-white font-bold h-[60px] md:h-[58px] px-10 rounded-2xl transition-all shadow-lg shadow-primary/25 active:scale-95 cursor-pointer flex items-center justify-center"
+                className="bg-primary hover:bg-primary-dark text-white font-bold h-15 md:h-14.5 px-10 rounded-2xl transition-all shadow-lg shadow-primary/25 active:scale-95 cursor-pointer flex items-center justify-center"
               >
                 Shorten Link
               </button>

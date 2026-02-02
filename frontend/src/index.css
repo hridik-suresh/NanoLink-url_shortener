@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme {
+:root {
     /* Defining our rooted brand colors */
     --color-primary: #4f46e5;
     --color-primary-dark: #3730a3;

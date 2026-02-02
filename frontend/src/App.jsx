@@ -1,22 +1,38 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
+import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import Navbar from "./components/NavBar";
+import Home from "./pages/Home";
+
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-[#0f172a] text-slate-200 flex flex-col items-center font-sans">
+      
+      <div className="min-h-screen flex flex-col bg-white font-sans selection:bg-primary/20 selection:text-primary">
+        {/* Navigation Bar */}
         <Navbar />
 
-        {/* Main Content Area */}
-        <main className="flex-1 flex flex-col items-center justify-center w-full p-6 mt-16">
+        <main className="grow w-full max-w-7xl mx-auto px-6 mb-20">
           <Routes>
             <Route path="/" element={<Home />} />
-            {/* <Route path="/stats" element={<Stats />} /> */}
+            
+
+            {/* Fallback for 404 */}
+            <Route
+              path="*"
+              element={
+                <div className="flex flex-col items-center justify-center pt-20 text-center">
+                  <h1 className="text-6xl font-black text-primary">404</h1>
+                  <p className="text-secondary mt-4 text-xl">
+                    Oops! This page doesn't exist.
+                  </p>
+                </div>
+              }
+            />
           </Routes>
         </main>
 
+        {/* Footer */}
         <Footer />
       </div>
     </Router>
