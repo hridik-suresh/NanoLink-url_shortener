@@ -68,6 +68,38 @@ export const register = async (req, res) => {
   }
 };
 
+// @desc    Verify Email-------------------------------------------------
+// @route   GET /api/auth/verify-email/:token
+export const verifyEmail = async (req, res) => {
+  try {
+    // 1. Find the user with this token
+    const user = await User.findOne({
+      verificationToken: req.params.token,
+      verificationTokenExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired verification token." });
+    }
+
+    // 2. Update user status
+    user.isVerified = true;
+    user.verificationToken = undefined; // Clear the token
+    user.verificationTokenExpires = undefined;
+
+    await user.save();
+
+    res.status(200).json({
+      status: "success",
+      message: "Email verified successfully! You can now log in.",
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Login user-------------------------------------------------
 // @route   POST /api/auth/login
 export const login = async (req, res) => {
