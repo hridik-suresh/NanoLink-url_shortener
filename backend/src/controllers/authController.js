@@ -1,5 +1,7 @@
-import User from "../models/User.js";
 import jwt from "jsonwebtoken";
+import crypto from "node:crypto";
+import User from "../models/User.js";
+import sendEmail from "../utils/sendEmail.js";
 
 // Helper function to create the Token
 const signToken = (id) => {
@@ -36,7 +38,7 @@ export const register = async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email },
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({ message: "Server error during registration" });
   }
 };
@@ -67,7 +69,74 @@ export const login = async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email },
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({ message: "Server error during login" });
+  }
+};
+
+// @desc    Forgot password-------------------------------------------------
+// @route   POST /api/auth/forgot-password
+export const forgotPassword = async (req, res) => {
+  try {
+    // 1. Get user based on POSTed email
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "There is no user with that email address." });
+    }
+
+    // Check if email is verified
+    if (!user.isVerified) {
+      return res.status(401).json({
+        message:
+          "Your email is not verified. Please verify your email first to use this feature.",
+      });
+    }
+
+    // 2. Generate a random reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    // 3. Hash the token and save it to DB (for security)
+    user.resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    // Token valid for 15 minutes
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+
+    await user.save();
+
+    // 4. Send it back to user's email
+    const resetURL = `${req.protocol}://${req.get("host")}/api/auth/reset-password/${resetToken}`;
+
+    const message = `Forgot your password? Click here to reset it: ${resetURL}\n\nIf you didn't forget your password, please ignore this email!`;
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: "Your password reset token (valid for 15 min)",
+        message,
+      });
+
+      res
+        .status(200)
+        .json({ status: "success", message: "Token sent to email!" });
+    } catch (err) {
+      console.log(err);
+
+      // If email fails, clear the DB fields
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save();
+      return res
+        .status(500)
+        .json({ message: "Error sending email. Try again later." });
+    }
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({ message: error.message });
   }
 };
