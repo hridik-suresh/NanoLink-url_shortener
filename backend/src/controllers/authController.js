@@ -22,6 +22,16 @@ export const register = async (req, res) => {
         .json({ message: "Please provide name, email and password" });
     }
 
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+      if (existingUser.isVerified) {
+        return res.status(400).json({ message: "Email already in use." });
+      }
+      // If they exist but aren't verified, delete the old one so we can start fresh
+      await User.findByIdAndDelete(existingUser._id);
+    }
+
     // 1. Create a random verification token
     const verificationToken = crypto.randomBytes(32).toString("hex");
 
@@ -214,7 +224,7 @@ export const forgotPassword = async (req, res) => {
 };
 
 // @desc    Reset password-------------------------------------------------
-// @route   POST /api/auth/reset-password/:token
+// @route   PATCH /api/auth/reset-password/:token
 export const resetPassword = async (req, res) => {
   try {
     // 1. Hash the token from the URL (to match the one in our DB)
