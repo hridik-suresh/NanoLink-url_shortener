@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-    /* Use --color-* naming convention inside @theme */
+    /* --color-* naming convention */
     --color-primary: #4f46e5;
     --color-primary-dark: #3730a3;
     --color-primary-light: #818cf8;
@@ -10,7 +10,7 @@
     --color-secondary: #64748b;
     --color-accent: #f43f5e;
 
-    /* Animations are also defined inside @theme in v4 */
+    /* Animations*/
     --animate-float: float 3s ease-in-out infinite;
 
     @keyframes float {
