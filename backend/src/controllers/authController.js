@@ -115,8 +115,16 @@ export const login = async (req, res) => {
     // 1. Find user & explicitly select the password (since we hid it in the model)
     const user = await User.findOne({ email }).select("+password");
 
+    // Compare the password using the method we added in the User model
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ message: "Invalid email or credentials" });
+    }
+
+    // Check if email is verified
+    if (!user.isVerified) {
+      return res.status(401).json({
+        message: "Please verify your email address before logging in.",
+      });
     }
 
     // 2. Send back token
