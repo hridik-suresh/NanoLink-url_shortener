@@ -22,24 +22,49 @@ export const register = async (req, res) => {
         .json({ message: "Please provide name, email and password" });
     }
 
-    // 1. Check if user already exists
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
-    }
+    // 1. Create a random verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
 
-    // 2. Create user (The pre-save hook in our model hashes the password)
-    const user = await User.create({ name, email, password });
-
-    // 3. Send back user data and the Token
-    res.status(201).json({
-      success: true,
-      token: signToken(user._id),
-      user: { id: user._id, name: user.name, email: user.email },
+    // 2. Create the user (isVerified defaults to false from our Schema)
+    const user = await User.create({
+      name,
+      email,
+      password,
+      verificationToken,
+      verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
     });
+
+    // 3. Construct the Verification URL
+    const verificationURL = `${req.protocol}://${req.get("host")}/api/auth/verify-email/${verificationToken}`;
+
+    const message = `Welcome to NanoLink, ${name}!\n\nPlease verify your email by clicking the link: ${verificationURL}`;
+
+    // 4. Send the Email
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: "Verify your NanoLink Account",
+        message,
+      });
+
+      res.status(201).json({
+        status: "success",
+        message:
+          "Registration successful! Please check your email to verify your account.",
+      });
+    } catch (err) {
+      console.log(err);
+
+      // Cleanup: If email fails, delete the user so they can try again
+      await User.findByIdAndDelete(user._id);
+      return res.status(500).json({
+        message: "Error sending verification email. Please try again.",
+      });
+    }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Server error during registration" });
+
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -78,8 +103,15 @@ export const login = async (req, res) => {
 // @route   POST /api/auth/forgot-password
 export const forgotPassword = async (req, res) => {
   try {
+    if (!req.body.email) {
+      return res
+        .status(400)
+        .json({ message: "Please provide your email address." });
+    }
+
     // 1. Get user based on POSTed email
     const user = await User.findOne({ email: req.body.email });
+
     if (!user) {
       return res
         .status(404)
