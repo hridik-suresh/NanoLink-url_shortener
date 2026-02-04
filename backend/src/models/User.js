@@ -20,6 +20,15 @@ const userSchema = new mongoose.Schema({
     minlength: 6,
     select: false, // This hides the password by default when we fetch user data
   },
+  resetPasswordToken: String, // Token that will recieve by the user to reset password
+  resetPasswordExpires: Date,
+  isVerified: {
+    // To check if the user's email is verified
+    type: Boolean,
+    default: false,
+  },
+  verificationToken: String,
+  verificationTokenExpires: Date,
   createdAt: {
     type: Date,
     default: Date.now,
@@ -39,7 +48,7 @@ userSchema.pre("save", async function (next) {
 });
 
 // --- HELPER METHOD ---
-// We add a method to the user object to check if a password is correct later
+// Added a method to the user object to check if a password is correct later
 userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
