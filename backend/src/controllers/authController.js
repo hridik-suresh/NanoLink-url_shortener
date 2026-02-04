@@ -140,3 +140,43 @@ export const forgotPassword = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Reset password-------------------------------------------------
+// @route   POST /api/auth/reset-password/:token
+export const resetPassword = async (req, res) => {
+  try {
+    // 1. Hash the token from the URL (to match the one in our DB)
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
+
+    // 2. Find the user with that token AND check if it's still valid (not expired)
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    // 3. If no user or token have expired
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "Token is invalid or has expired." });
+    }
+
+    // 4. Update the password and clear the reset fields
+    user.password = req.body.password; // Note: User model should have a .pre('save') to hash this!
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save();
+
+    res
+      .status(200)
+      .json({ status: "success", message: "Password updated successfully!" });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({ message: error.message });
+  }
+};
