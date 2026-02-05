@@ -42,6 +42,7 @@ passport.use(
 
         done(null, newUser);
       } catch (error) {
+        console.error("Error in Google Strategy:", error);
         // If something goes wrong, tell Passport there was an error
         done(error, null);
       }
