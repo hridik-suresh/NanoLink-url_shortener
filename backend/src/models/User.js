@@ -40,6 +40,16 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+// Automatically delete document after 24 hours (86400 seconds)
+// But onlt if isVerified is false
+userSchema.index(
+  { createdAt: 1 },
+  {
+    expireAfterSeconds: 86400,
+    partialFilterExpression: { isVerified: false },
+  },
+);
+
 // --- ENCRYPTION LOGIC ---
 // This runs automatically every time a user is saved
 userSchema.pre("save", async function (next) {
