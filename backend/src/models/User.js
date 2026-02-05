@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, "Password is required"],
+    required: false, // Not required for Google users
     minlength: 6,
     select: false, // This hides the password by default when we fetch user data
   },
@@ -43,8 +43,10 @@ const userSchema = new mongoose.Schema({
 // --- ENCRYPTION LOGIC ---
 // This runs automatically every time a user is saved
 userSchema.pre("save", async function (next) {
-  // Only hash the password if it's new or being modified
-  if (!this.isModified("password")) return next();
+  // If there is no password (like a Google user), skip hashing!
+  if (!this.password || !this.isModified("password")) {
+    return next();
+  }
 
   // Generate a salt and hash the password
   const salt = await bcrypt.genSalt(10);

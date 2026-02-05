@@ -4,7 +4,7 @@ import User from "../models/User.js";
 import sendEmail from "../utils/sendEmail.js";
 
 // Helper function to create the Token
-const signToken = (id) => {
+export const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: "30d", // Token lasts for 30 days
   });
