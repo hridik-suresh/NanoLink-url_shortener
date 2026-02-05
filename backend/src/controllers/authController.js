@@ -40,6 +40,8 @@ export const register = async (req, res) => {
       name,
       email,
       password,
+      // This creates a nice avatar with their actual initials
+      avatar: `https://ui-avatars.com/api/?name=${name.split(" ").join("+")}&background=random`,
       verificationToken,
       verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
     });
