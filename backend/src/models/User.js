@@ -29,6 +29,11 @@ const userSchema = new mongoose.Schema({
   },
   verificationToken: String,
   verificationTokenExpires: Date,
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true, // sparse allows multiple users to have 'null' (for non-google users)
+  },
   createdAt: {
     type: Date,
     default: Date.now,
