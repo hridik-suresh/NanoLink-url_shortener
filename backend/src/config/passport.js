@@ -38,6 +38,7 @@ passport.use(
           email: profile.emails[0].value,
           googleId: profile.id,
           isVerified: true,
+          avatar: profile.photos[0].value,
         });
 
         done(null, newUser);

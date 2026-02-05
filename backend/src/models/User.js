@@ -1,44 +1,44 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Name is required"],
-    trim: true,
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Name is required"],
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, "Email is required"],
+      unique: true, // Prevents duplicate accounts
+      lowercase: true,
+      trim: true,
+    },
+    password: {
+      type: String,
+      required: false, // Not required for Google users
+      minlength: 6,
+      select: false, // This hides the password by default when we fetch user data
+    },
+    avatar: String, // Store Google profile picture URL
+    resetPasswordToken: String, // Token that will recieve by the user to reset password
+    resetPasswordExpires: Date,
+    isVerified: {
+      // To check if the user's email is verified
+      type: Boolean,
+      default: false,
+    },
+    verificationToken: String,
+    verificationTokenExpires: Date,
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true, // sparse allows multiple users to have 'null' (for non-google users)
+    },
   },
-  email: {
-    type: String,
-    required: [true, "Email is required"],
-    unique: true, // Prevents duplicate accounts
-    lowercase: true,
-    trim: true,
-  },
-  password: {
-    type: String,
-    required: false, // Not required for Google users
-    minlength: 6,
-    select: false, // This hides the password by default when we fetch user data
-  },
-  resetPasswordToken: String, // Token that will recieve by the user to reset password
-  resetPasswordExpires: Date,
-  isVerified: {
-    // To check if the user's email is verified
-    type: Boolean,
-    default: false,
-  },
-  verificationToken: String,
-  verificationTokenExpires: Date,
-  googleId: {
-    type: String,
-    unique: true,
-    sparse: true, // sparse allows multiple users to have 'null' (for non-google users)
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  { timestamps: true },
+);
 
 // Automatically delete document after 24 hours (86400 seconds)
 // But onlt if isVerified is false
