@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import {UAParser} from "ua-parser-js";
+import { UAParser } from "ua-parser-js";
 import Url from "../models/Url.js";
 import Analytics from "../models/Analytics.js";
 import { formatUrl } from "../utils/urlHelper.js";
@@ -114,31 +114,6 @@ export const updateUrlAlias = async (req, res) => {
     });
   } catch (error) {
     console.log("Error updating URL alias:", error);
-    res.status(500).json({ message: "Server Error" });
-  }
-};
-
-// @desc    Get all URLs created by the logged-in user--------------------------------------
-// @route   GET /api/url/my-links
-export const getUserUrls = async (req, res) => {
-  try {
-    // req.user._id is available thanks to the 'protect' middleware
-    const urls = await Url.find({ user: req.user._id }).sort({ createdAt: -1 });
-
-    if (urls.length === 0) {
-      return res.status(200).json({
-        message: "You have not created any shortened URLs yet.",
-        urls: [],
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      count: urls.length,
-      urls,
-    });
-  } catch (error) {
-    console.error("Error fetching user URLs:", error);
     res.status(500).json({ message: "Server Error" });
   }
 };

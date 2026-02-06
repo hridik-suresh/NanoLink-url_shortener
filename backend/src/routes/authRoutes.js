@@ -12,16 +12,25 @@ import { signToken } from "../controllers/authController.js";
 const router = express.Router();
 
 // 1. Regular email/password routes
+// POST /api/auth/register
 router.post("/register", register);
+
 // 2. Email verification route (user clicks the link in their email)
+// GET /api/auth/verify-email/:token
 router.get("/verify-email/:token", verifyEmail);
+
 // 3. Login route
+// POST /api/auth/login
 router.post("/login", login);
+
 // 4. Password reset routes
+// POST /api/auth/forgot-password
 router.post("/forgot-password", forgotPassword);
+// POST /api/auth/reset-password/:token
 router.patch("/reset-password/:token", resetPassword);
 
 // 5.START GOOGLE AUTH
+// GET /api/auth/google
 // This route redirects the user to Google's login page
 router.get(
   "/google",
@@ -29,6 +38,7 @@ router.get(
 );
 
 // 6.GOOGLE CALLBACK
+// GET /api/auth/google/callback
 // Google sends the user back here with a "code"
 router.get(
   "/google/callback",
