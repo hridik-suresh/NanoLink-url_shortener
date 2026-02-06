@@ -170,6 +170,10 @@ export const redirectUrl = async (req, res) => {
       const osName = `${result.os.name || "Unknown"} ${result.os.version || ""}`;
       const deviceType = result.device.type || "Desktop";
 
+      const ip =
+        req.headers["x-forwarded-for"]?.split(",")[0] ||
+        req.socket.remoteAddress;
+
       // 4. Save analytics (Background task)
       Analytics.create({
         urlId: urlEntry._id,
@@ -177,6 +181,7 @@ export const redirectUrl = async (req, res) => {
         os: osName,
         device: deviceType.charAt(0).toUpperCase() + deviceType.slice(1), // Capitalize
         referrer: req.headers["referer"] || "Direct",
+        ipAddress: ip, // Storing the raw IP to process location later
       }).catch((err) => console.error("Analytics Error:", err));
     }
 
