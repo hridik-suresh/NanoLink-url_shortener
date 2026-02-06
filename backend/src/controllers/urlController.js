@@ -78,25 +78,7 @@ export const updateUrlAlias = async (req, res) => {
     const { newAlias } = req.body;
     const { id } = req.params; // The MongoDB _id of the URL entry
 
-    if (!newAlias) {
-      return res.status(400).json({ message: "Please provide a new alias" });
-    }
-
-    // 1. Validation: No spaces or special characters (Alphanumeric and dashes only)
-    const aliasRegex = /^[a-zA-Z0-9-_]+$/;
-    if (!newAlias || !aliasRegex.test(newAlias)) {
-      return res.status(400).json({
-        message: "Invalid alias. Use only letters, numbers, and dashes.",
-      });
-    }
-
-    // 2. Check if the new alias is already in use by anyone
-    const aliasExists = await Url.findOne({ shortId: newAlias });
-    if (aliasExists) {
-      return res.status(400).json({ message: "This alias is already taken" });
-    }
-
-    // 3. Find the URL and ensure it belongs to the logged-in user
+    // 1. Fetch the URL first and verify ownership
     const url = await Url.findOne({ _id: id, user: req.user._id });
 
     if (!url) {
@@ -105,8 +87,22 @@ export const updateUrlAlias = async (req, res) => {
         .json({ message: "Link not found or unauthorized" });
     }
 
-    // 4. Update the alias
-    url.shortId = newAlias;
+    // 2. Handle Alias Update logic
+    if (newAlias && newAlias !== url.shortId) {
+      // Validation
+      const aliasRegex = /^[a-zA-Z0-9-_]+$/;
+      if (!aliasRegex.test(newAlias)) {
+        return res.status(400).json({ message: "Invalid alias format." });
+      }
+
+      // Check if someone else is using it
+      const aliasExists = await Url.findOne({ shortId: newAlias });
+      if (aliasExists) {
+        return res.status(400).json({ message: "This alias is already taken" });
+      }
+
+      url.shortId = newAlias;
+    }
     await url.save();
 
     res.json({
