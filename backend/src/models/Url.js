@@ -8,7 +8,7 @@ const urlSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: false, // False allows Guest users to still shorten links
+      default: null, // Allows for guest-created URLs
     },
   },
   { timestamps: true },

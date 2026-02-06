@@ -9,22 +9,33 @@ const baseUrl =
 // post /api/url/create
 export const createShortUrl = async (req, res) => {
   try {
-    const { url, customAlias } = req.body; // Add customAlias here
+    const { url, customAlias } = req.body;
     if (!url) return res.status(400).json({ message: "Please provide a URL" });
 
     const formattedUrl = formatUrl(url);
     const userId = req.user ? req.user._id : null;
 
-    // 1. If NO custom alias is provided, check for existing link to avoid duplicates
-    if (!customAlias) {
-      const existingUrl = await Url.findOne({
-        originalUrl: formattedUrl,
-        user: userId,
+    // --- NEW: GUEST RESTRICTION ---
+    // If they provided a custom alias but req.user is null (not logged in)
+    if (customAlias && !userId) {
+      return res.status(401).json({
+        success: false,
+        message: "You must be logged in to create custom aliases.",
       });
-      if (existingUrl) {
+    }
+
+    // 1. If NO custom alias is provided, check for existing link
+    if (!customAlias) {
+      // Search for a link that matches the URL AND has NO owner (user: null)
+      const existingGuestUrl = await Url.findOne({
+        originalUrl: formattedUrl,
+        user: null,
+      });
+
+      if (existingGuestUrl) {
         return res.json({
-          shortUrl: `${baseUrl}/${existingUrl.shortId}`,
-          message: "URL already in your list",
+          shortUrl: `${baseUrl}/${existingGuestUrl.shortId}`,
+          message: "Reusing existing guest link",
           success: true,
         });
       }
@@ -41,11 +52,13 @@ export const createShortUrl = async (req, res) => {
       }
     }
 
+    // 4. Create the document
     const newUrl = new Url({
       originalUrl: formattedUrl,
       shortId,
-      user: userId,
+      user: userId, // Will be null for guests, and the User ID for logged-in users
     });
+
     await newUrl.save();
 
     res.status(201).json({
@@ -115,12 +128,10 @@ export const getUserUrls = async (req, res) => {
     const urls = await Url.find({ user: req.user._id }).sort({ createdAt: -1 });
 
     if (urls.length === 0) {
-      return res
-        .status(200)
-        .json({
-          message: "You have not created any shortened URLs yet.",
-          urls: [],
-        });
+      return res.status(200).json({
+        message: "You have not created any shortened URLs yet.",
+        urls: [],
+      });
     }
 
     res.status(200).json({
