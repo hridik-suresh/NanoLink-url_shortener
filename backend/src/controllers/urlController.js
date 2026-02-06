@@ -1,5 +1,7 @@
 import { nanoid } from "nanoid";
+import {UAParser} from "ua-parser-js";
 import Url from "../models/Url.js";
+import Analytics from "../models/Analytics.js";
 import { formatUrl } from "../utils/urlHelper.js";
 
 const baseUrl =
@@ -145,29 +147,42 @@ export const getUserUrls = async (req, res) => {
 // get /:shortId
 export const redirectUrl = async (req, res) => {
   try {
-    const { shortId } = req.params;
+    const shortId = req.params.shortId.trim();
 
-    // 1. Find the URL and increment the click count in one operation
+    // 1. COMBINED OPERATION: Find the URL and increment the click count in one go
     const urlEntry = await Url.findOneAndUpdate(
-      { shortId: shortId.trim() },
+      { shortId },
       { $inc: { clicks: 1 } },
-      { new: true }, // Return the updated document
+      { new: true },
     );
 
-    if (urlEntry) {
-      // 2. Redirect to the original long URL
-      return res.redirect(urlEntry.originalUrl);
+    if (!urlEntry) {
+      return res.status(404).json({ message: "Link not found" });
     }
 
-    // Friendly 404 if the shortId doesn't exist
-    return res.status(404).send(`
-    <div style="text-align:center; font-family:sans-serif; margin-top:50px;">
-      <h1>404: Link not found</h1>
-      <p>This shortened link does not exist in our database.</p>
-    </div>
-`);
+    if (urlEntry.user) {
+      // 2. Initialize the parser with the request headers
+      const parser = new UAParser(req.headers["user-agent"]);
+      const result = parser.getResult();
+
+      // 3. Extract clean data
+      const browserName = result.browser.name || "Unknown";
+      const osName = `${result.os.name || "Unknown"} ${result.os.version || ""}`;
+      const deviceType = result.device.type || "Desktop";
+
+      // 4. Save analytics (Background task)
+      Analytics.create({
+        urlId: urlEntry._id,
+        browser: browserName,
+        os: osName,
+        device: deviceType.charAt(0).toUpperCase() + deviceType.slice(1), // Capitalize
+        referrer: req.headers["referer"] || "Direct",
+      }).catch((err) => console.error("Analytics Error:", err));
+    }
+
+    return res.redirect(urlEntry.originalUrl);
   } catch (error) {
-    console.error("Redirect error:", error);
-    res.status(500).send("Server Error...");
+    console.error("Redirect Error:", error);
+    res.status(500).json({ message: "Server Error" });
   }
 };
