@@ -1,5 +1,6 @@
 import { nanoid } from "nanoid";
 import { UAParser } from "ua-parser-js";
+import geoip from "geoip-lite";
 import Url from "../models/Url.js";
 import Analytics from "../models/Analytics.js";
 import { formatUrl } from "../utils/urlHelper.js";
@@ -148,6 +149,7 @@ export const redirectUrl = async (req, res) => {
       const ip =
         req.headers["x-forwarded-for"]?.split(",")[0] ||
         req.socket.remoteAddress;
+      const geo = geoip.lookup(ip); // This will give us country and city info based on the IP address
 
       // 4. Save analytics (Background task)
       Analytics.create({
@@ -157,6 +159,8 @@ export const redirectUrl = async (req, res) => {
         device: deviceType.charAt(0).toUpperCase() + deviceType.slice(1), // Capitalize
         referrer: req.headers["referer"] || "Direct",
         ipAddress: ip, // Storing the raw IP to process location later
+        country: geo?.country || "Unknown",
+        city: geo?.city || "Unknown",
       }).catch((err) => console.error("Analytics Error:", err));
     }
 
