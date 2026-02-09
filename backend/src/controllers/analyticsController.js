@@ -1,6 +1,8 @@
 import Url from "../models/Url.js";
 import Analytics from "../models/Analytics.js";
 
+// @desc    Get user dashboard stats---------------------------------------------
+// @route   GET /api/analytics/dashboard
 export const getUserDashboardStats = async (req, res) => {
   try {
     const userId = req.user._id;

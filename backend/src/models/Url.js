@@ -9,6 +9,7 @@ const urlSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null, // Allows for guest-created URLs
+      index: true,
     },
   },
   { timestamps: true },

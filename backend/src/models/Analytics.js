@@ -1,23 +1,22 @@
 import mongoose from "mongoose";
 
-const analyticsSchema = new mongoose.Schema({
-  urlId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Url",
-    required: true,
+const analyticsSchema = new mongoose.Schema(
+  {
+    urlId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Url",
+      required: true,
+    },
+    device: String,
+    browser: String,
+    os: String,
+    country: { type: String, default: "Unknown" },
+    city: { type: String, default: "Unknown" },
+    referrer: String,
+    ipAddress: { type: String, default: "Unknown" },
   },
-  clickedAt: {
-    type: Date,
-    default: Date.now,
-  },
-  device: String,
-  browser: String,
-  os: String,
-  country: String,
-  city: String,
-  referrer: String,
-  ipAddress: String,
-});
+  { timestamps: true },
+);
 
 const Analytics = mongoose.model("Analytics", analyticsSchema);
 export default Analytics;
