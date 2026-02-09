@@ -6,7 +6,8 @@ import connectDB from "./src/config/db.js";
 import urlRoutes from "./src/routes/urlRoutes.js";
 import { redirectUrl } from "./src/controllers/urlController.js";
 import authRoutes from "./src/routes/authRoutes.js";
-import "./src/config/passport.js"; // runs it
+import "./src/config/passport.js"; // runs it to configure passport strategies
+import analyticsRoutes from "./src/routes/analyticsRoutes.js";
 
 const app = express();
 
@@ -20,12 +21,14 @@ app.use(cors());
 app.use(express.json());
 app.use(passport.initialize());
 
-// Routes
+// Routes-----------------
 
 //  Auth Routes
 app.use("/api/auth", authRoutes);
 //  URL Management Routes
 app.use("/api/url", urlRoutes);
+//  Analytics Routes
+app.use("/api/analytics", analyticsRoutes);
 //  The Redirect Route
 app.get("/:shortId", redirectUrl);
 
