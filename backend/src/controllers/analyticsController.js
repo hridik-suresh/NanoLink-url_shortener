@@ -5,13 +5,26 @@ export const getUserDashboardStats = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // 1. Get all URLs owned by this user
-    const userUrls = await Url.find({ user: userId }).select("-__v");
-    const urlIds = userUrls.map((url) => url._id);
+    // --- 1. Pagination Setup ---
+    const page = parseInt(req.query.page) || 1; // Default to page 1
+    const limit = parseInt(req.query.limit) || 10; // Default to 10 links per page
+    const skip = (page - 1) * limit;
 
-    // 2. Aggregate Analytics for these URLs
+    // --- 2. Fetch Paginated Links & Total Count ---
+    const [userUrls, totalLinks] = await Promise.all([
+      Url.find({ user: userId })
+        .select("-__v")
+        .sort({ createdAt: -1 }) // Show newest links first
+        .skip(skip)
+        .limit(limit),
+      Url.countDocuments({ user: userId }),
+    ]);
+
+    // --- 3. Aggregate Analytics ---
+    const allUserUrlIds = await Url.find({ user: userId }).distinct("_id");
+
     const stats = await Analytics.aggregate([
-      { $match: { urlId: { $in: urlIds } } },
+      { $match: { urlId: { $in: allUserUrlIds } } },
       {
         $facet: {
           deviceBreakdown: [{ $group: { _id: "$device", count: { $sum: 1 } } }],
@@ -23,23 +36,24 @@ export const getUserDashboardStats = async (req, res) => {
       },
     ]);
 
-    // 3. Find the top performing link (highest clicks from the Url model)
     const topPerforming = await Url.findOne({ user: userId })
       .sort({ clicks: -1 })
       .limit(1);
 
-    // 4. Structure the REST Response
+    // --- 4. Structure the Response ---
     res.status(200).json({
       success: true,
       data: {
-        totalLinks: userUrls.length,
+        totalLinks, // Total number of links in database
+        currentPage: page,
+        totalPages: Math.ceil(totalLinks / limit),
         totalClicks: stats[0].totalClicks[0]?.count || 0,
         topLink: topPerforming,
         breakdowns: {
           devices: stats[0].deviceBreakdown,
           browsers: stats[0].browserBreakdown,
         },
-        links: userUrls, // The list of all links for the table
+        links: userUrls, // Only the 10 links for this specific page
       },
     });
   } catch (error) {
