@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema(
       unique: true, // Prevents duplicate accounts
       lowercase: true,
       trim: true,
+      index: true, // Speeds up queries by email
     },
     password: {
       type: String,
