@@ -119,8 +119,39 @@ export const updateUrlAlias = async (req, res) => {
   }
 };
 
-// Controller to handle redirection---------------------------------------------------
-// get /:shortId
+// @desc    Delete a URL and its analytics------------------------------------------------
+// @route   DELETE /api/url/:id
+export const deleteUrl = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    // 1. Find the URL first to make sure it belongs to the user
+    const url = await Url.findOne({ _id: id, user: userId });
+
+    if (!url) {
+      return res.status(404).json({ message: "URL not found or unauthorized" });
+    }
+
+    // 2. Delete the URL and all associated analytics
+    // Use Promise.all to run both deletions at the same time for speed
+    await Promise.all([
+      Url.findByIdAndDelete(id),
+      Analytics.deleteMany({ urlId: id }),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: "URL and all associated analytics deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete URL Error:", error);
+    res.status(500).json({ message: "Server Error deleting URL" });
+  }
+};
+
+// @desc Controller to handle redirection---------------------------------------------------
+// @route get /:shortId
 export const redirectUrl = async (req, res) => {
   try {
     const shortId = req.params.shortId.trim();
