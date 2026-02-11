@@ -74,7 +74,7 @@ export const register = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log(error);
+    console.log("Registration Error:", error);
 
     res.status(500).json({ message: error.message });
   }
@@ -108,6 +108,7 @@ export const verifyEmail = async (req, res) => {
       message: "Email verified successfully! You can now log in.",
     });
   } catch (error) {
+    console.log("Email Verification Error:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -146,7 +147,7 @@ export const login = async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email },
     });
   } catch (error) {
-    console.log(error);
+    console.log("Login Error:", error);
     res.status(500).json({ message: "Server error during login" });
   }
 };
@@ -259,7 +260,7 @@ export const resetPassword = async (req, res) => {
       .status(200)
       .json({ status: "success", message: "Password updated successfully!" });
   } catch (error) {
-    console.log(error);
+    console.log("Reset Password Error:", error);
 
     res.status(500).json({ message: error.message });
   }
