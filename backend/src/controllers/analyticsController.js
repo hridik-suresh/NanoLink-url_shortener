@@ -33,6 +33,16 @@ export const getUserDashboardStats = async (req, res) => {
           browserBreakdown: [
             { $group: { _id: "$browser", count: { $sum: 1 } } },
           ],
+          countryBreakdown: [
+            { $group: { _id: "$country", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 5 }, // Top 5 countries
+          ],
+          cityBreakdown: [
+            { $group: { _id: "$city", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 5 },
+          ],
           totalClicks: [{ $count: "count" }],
         },
       },
@@ -54,6 +64,8 @@ export const getUserDashboardStats = async (req, res) => {
         breakdowns: {
           devices: stats[0].deviceBreakdown,
           browsers: stats[0].browserBreakdown,
+          countries: stats[0].countryBreakdown,
+          cities: stats[0].cityBreakdown,
         },
         links: userUrls, // Only the 10 links for this specific page
       },
