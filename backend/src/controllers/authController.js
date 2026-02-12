@@ -3,6 +3,8 @@ import crypto from "node:crypto";
 import User from "../models/User.js";
 import sendEmail from "../utils/sendEmail.js";
 
+const frontendURL = process.env.FRONTEND_URL;
+
 // Helper function to create the Token
 export const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -103,7 +105,7 @@ export const verifyEmail = async (req, res) => {
 
     await user.save();
 
-    res.redirect(`${process.env.FRONTEND_URL}/login?verified=true`);
+    res.redirect(`${frontendURL}/login?verified=true`);
   } catch (error) {
     console.log("Email Verification Error:", error);
     res.status(500).json({ message: error.message });

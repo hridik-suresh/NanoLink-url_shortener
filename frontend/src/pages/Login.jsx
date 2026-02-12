@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Mail, Lock, Loader, LogIn } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   loginStart,
@@ -12,6 +12,8 @@ import Input from "../components/Input.jsx";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [searchParams] = useSearchParams();
+  const isVerified = searchParams.get("verified") === "true";
 
   // 1. Redux Tools
   const dispatch = useDispatch();
@@ -53,6 +55,11 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-2">
+          {isVerified && (
+            <div className="bg-accent/10 border border-accent/20 text-accent text-sm p-3 rounded-lg mb-4 text-center">
+              Email verified successfully! You can now log in.
+            </div>
+          )}
           <Input
             icon={Mail}
             type="email"
