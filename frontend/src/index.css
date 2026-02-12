@@ -1,27 +1,27 @@
 @import "tailwindcss";
 
 @theme {
-    /* --color-* naming convention */
-    --color-primary: #4f46e5;
-    --color-primary-dark: #3730a3;
-    --color-primary-light: #818cf8;
+    /* Brand Colors */
+    --color-primary: #3b82f6; /* Vibrant Blue */
+    --color-primary-dark: #1d4ed8;
+    --color-secondary: #6366f1; /* Indigo */
 
-    --color-dark: #0f172a;
-    --color-secondary: #64748b;
-    --color-accent: #f43f5e;
+    /* Background Colors */
+    --color-bg-main: #0f172a; /* Deep Slate (Dark Mode) */
+    --color-bg-card: #1e293b; /* Lighter Slate for cards */
 
-    /* Animations*/
-    --animate-float: float 3s ease-in-out infinite;
+    /* Accent Colors */
+    --color-accent: #10b981; /* Emerald Green for success/verify */
+    --color-danger: #ef4444; /* Red for errors/delete */
 
-    @keyframes float {
+    /* Border Radius */
+    --radius-xl: 1rem;
+    --radius-2xl: 1.5rem;
+}
 
-        0%,
-        100% {
-            transform: translateY(0px);
-        }
-
-        50% {
-            transform: translateY(-10px);
-        }
+/* Base Styles (Optional) */
+@layer base {
+    body {
+        @apply bg-bg-main text-white antialiased;
     }
 }
