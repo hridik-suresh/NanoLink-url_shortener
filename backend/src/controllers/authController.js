@@ -35,7 +35,7 @@ export const register = async (req, res) => {
     // 1. Create a random verification token
     const verificationToken = crypto.randomBytes(32).toString("hex");
 
-    // 2. Create the user (isVerified defaults to false from our Schema)
+    // 2. Create the user (isVerified defaults to false from the Schema)
     const user = await User.create({
       name,
       email,
@@ -250,7 +250,7 @@ export const resetPassword = async (req, res) => {
     }
 
     // 4. Update the password and clear the reset fields
-    user.password = req.body.password; // Note: User model should have a .pre('save') to hash this!
+    user.password = req.body.password; // Note: User model have a .pre('save') to hash this!
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
 
