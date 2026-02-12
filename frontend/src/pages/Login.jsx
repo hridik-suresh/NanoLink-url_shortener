@@ -1,116 +1,111 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Mail, Lock, Loader, LogIn } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  loginStart,
+  loginSuccess,
+  loginFailure,
+} from "../store/slices/authSlice.js";
+import axiosInstance from "../api/axiosInstance";
+import Input from "../components/Input.jsx";
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
 
-  const handleSubmit = (e) => {
+  // 1. Redux Tools
+  const dispatch = useDispatch();
+  const { loading, error } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Logging in with:", formData);
-    // Integration with Redux Toolkit comes later
+
+    // 2. Tell Redux we are starting the login process (shows spinner)
+    dispatch(loginStart());
+
+    try {
+      const response = await axiosInstance.post("/auth/login", formData);
+
+      // 3. If successful, save token/user to LocalStorage
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+
+      // 4. Update Redux with the user data
+      dispatch(loginSuccess(response.data.user));
+
+      // 5. Send the user to the dashboard
+      navigate("/dashboard");
+    } catch (err) {
+      // 6. If it fails, tell Redux the error message
+      dispatch(
+        loginFailure(err.response?.data?.message || "Invalid credentials"),
+      );
+    }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center pt-8 md:pt-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Header */}
-      <div className="text-center mb-10">
-        <h2 className="text-4xl font-black text-dark tracking-tight mb-2">
-          Welcome Back
-        </h2>
-        <p className="text-secondary font-medium">
-          Log in to manage your links and view analytics.
-        </p>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-bg-main p-4">
+      <div className="w-full max-w-md bg-bg-card border border-gray-800 rounded-2xl shadow-2xl p-8">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-white">Welcome Back</h2>
+          <p className="text-gray-400 mt-2">Login to manage your links</p>
+        </div>
 
-      {/* Login Card */}
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl shadow-primary/10 border border-slate-100 p-2 md:p-3">
-        <form
-          onSubmit={handleSubmit}
-          className="bg-slate-50 rounded-[1.4rem] p-8 flex flex-col gap-5"
-        >
-          {/* Email Field */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-widest text-secondary ml-1">
-              Email Address
-            </label>
-            <input
-              type="email"
-              placeholder="john@example.com"
-              className="w-full px-5 py-3.5 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-dark shadow-sm"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-              required
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-2">
+          <Input
+            icon={Mail}
+            type="email"
+            placeholder="Email Address"
+            required
+            value={formData.email}
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
+          />
+          <Input
+            icon={Lock}
+            type="password"
+            placeholder="Password"
+            required
+            value={formData.password}
+            onChange={(e) =>
+              setFormData({ ...formData, password: e.target.value })
+            }
+          />
 
-          {/* Password Field */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center ml-1">
-              <label className="text-xs font-bold uppercase tracking-widest text-secondary">
-                Password
-              </label>
-              <button
-                type="button"
-                className="text-[10px] font-bold text-primary hover:underline uppercase tracking-tighter"
-              >
-                Forgot?
-              </button>
+          {error && (
+            <div className="bg-danger/10 border border-danger/20 text-danger text-sm p-3 rounded-lg mb-4">
+              {error}
             </div>
-            <input
-              type="password"
-              placeholder="••••••••"
-              className="w-full px-5 py-3.5 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-dark shadow-sm"
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              required
-            />
-          </div>
+          )}
 
-          {/* Remember Me Toggle */}
-          <div className="flex items-center gap-2 ml-1">
-            <input
-              type="checkbox"
-              id="remember"
-              className="w-4 h-4 accent-primary rounded cursor-pointer"
-            />
-            <label
-              htmlFor="remember"
-              className="text-sm text-secondary font-medium cursor-pointer select-none"
-            >
-              Keep me logged in
-            </label>
-          </div>
-
-          {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-primary/25 active:scale-[0.98] mt-2 cursor-pointer"
+            disabled={loading}
+            className="w-full py-3.5 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl 
+                       transition-all flex justify-center items-center gap-2 disabled:opacity-70"
           >
-            Sign In
+            {loading ? (
+              <Loader className="animate-spin size-5" />
+            ) : (
+              <>
+                Sign In <LogIn className="size-5" />
+              </>
+            )}
           </button>
-
-          <p className="text-center text-sm text-secondary font-medium mt-2">
-            New to NanoLink?{" "}
-            <Link
-              to="/register"
-              className="text-primary hover:underline font-bold"
-            >
-              Create an account
-            </Link>
-          </p>
         </form>
-      </div>
 
-      <p className="mt-8 text-slate-400 text-xs italic">
-        Your data is encrypted and secure.
-      </p>
+        <p className="mt-8 text-center text-gray-400 text-sm">
+          Don't have an account?{" "}
+          <Link
+            to="/register"
+            className="text-primary hover:underline font-medium"
+          >
+            Create one
+          </Link>
+        </p>
+      </div>
     </div>
   );
 };
