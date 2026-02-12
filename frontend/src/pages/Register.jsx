@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { User, Mail, Lock, Loader, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import axiosInstance from "../api/axiosInstance.js";
+import Input from "../components/Input.jsx";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -7,120 +10,121 @@ const Register = () => {
     email: "",
     password: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Registering with:", formData);
-    // Logic will be added when I implement Redux Toolkit
+    setLoading(true);
+    setError("");
+    setMessage("");
+
+    try {
+      // Using our configured axiosInstance
+      const response = await axiosInstance.post("/auth/register", formData);
+      setMessage(response.data.message);
+    } catch (err) {
+      // Check if backend sent a specific error message
+      setError(
+        err.response?.data?.message || "Registration failed. Try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center pt-8 md:pt-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Header */}
-      <div className="text-center mb-10">
-        <h2 className="text-4xl font-black text-dark tracking-tight mb-2">
-          Create an account
-        </h2>
-        <p className="text-secondary font-medium">
-          Join <span className="text-primary font-bold">NanoLink</span> to track
-          your links and set custom aliases.
-        </p>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-bg-main p-4 sm:p-6">
+      
+      <div className="w-full max-w-md bg-bg-card border border-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+        {/* Header Section */}
+        <div className="p-6 sm:p-8 text-center">
+          <h2 className="text-3xl font-bold text-white tracking-tight">
+            Create Account
+          </h2>
+          <p className="text-gray-400 mt-2 text-sm">
+            Join NanoLink to manage your short URLs
+          </p>
+        </div>
 
-      {/* Register Card */}
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl shadow-primary/10 border border-slate-100 p-2 md:p-3">
-        <form
-          onSubmit={handleSubmit}
-          className="bg-slate-50 rounded-[1.4rem] p-8 flex flex-col gap-5"
-        >
-          {/* Name Field */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-widest text-secondary ml-1">
-              Full Name
-            </label>
-            <input
+        {/* Form Section */}
+        <div className="px-6 pb-8 sm:px-8">
+          <form onSubmit={handleSubmit} className="space-y-1">
+            <Input
+              icon={User}
               type="text"
-              placeholder="John Doe"
-              className="w-full px-5 py-3.5 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-dark shadow-sm"
+              placeholder="Full Name"
+              required
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              required
             />
-          </div>
-
-          {/* Email Field */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-widest text-secondary ml-1">
-              Email Address
-            </label>
-            <input
+            <Input
+              icon={Mail}
               type="email"
-              placeholder="john@example.com"
-              className="w-full px-5 py-3.5 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-dark shadow-sm"
+              placeholder="Email Address"
+              required
               value={formData.email}
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              required
             />
-          </div>
-
-          {/* Password Field */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-widest text-secondary ml-1">
-              Password
-            </label>
-            <input
+            <Input
+              icon={Lock}
               type="password"
-              placeholder="••••••••"
-              className="w-full px-5 py-3.5 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-dark shadow-sm"
+              placeholder="Password"
+              required
               value={formData.password}
               onChange={(e) =>
                 setFormData({ ...formData, password: e.target.value })
               }
-              required
             />
-          </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-primary/25 active:scale-[0.98] mt-2 cursor-pointer"
-          >
-            Create Account
-          </button>
+            {/* Error & Success Alerts */}
+            {error && (
+              <div className="bg-danger/10 border border-danger/20 text-danger text-sm p-3 rounded-lg mb-4">
+                {error}
+              </div>
+            )}
+            {message && (
+              <div className="bg-accent/10 border border-accent/20 text-accent text-sm p-3 rounded-lg mb-4">
+                {message}
+              </div>
+            )}
 
-          <p className="text-center text-sm text-secondary font-medium mt-2">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="text-primary hover:underline font-bold"
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl 
+                         transition-all duration-300 transform active:scale-[0.98] 
+                         flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              Sign In
-            </Link>
-          </p>
-        </form>
-      </div>
+              {loading ? (
+                <Loader className="animate-spin size-5" />
+              ) : (
+                <>
+                  Get Started <ArrowRight className="size-5" />
+                </>
+              )}
+            </button>
+          </form>
 
-      {/* Trust Badge */}
-      <p className="mt-8 text-slate-400 text-xs flex items-center gap-2">
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04kM12 21.75c-2.676 0-5.216-.584-7.499-1.632A12.02 12.02 0 013 12c0-2.342.67-4.52 1.83-6.368a12.053 12.053 0 017.67-5.188 12.053 12.053 0 017.67 5.188A12.053 12.053 0 0121 12c0 2.342-.67 4.52-1.83 6.368a12.02 12.02 0 01-7.499 1.632z"
-          />
-        </svg>
-        Secure 256-bit encrypted connection
-      </p>
+          {/* Footer Link */}
+          <div className="mt-8 text-center">
+            <p className="text-gray-400 text-sm">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="text-primary hover:text-primary-dark font-medium underline underline-offset-4"
+              >
+                Sign In
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
