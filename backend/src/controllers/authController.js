@@ -103,10 +103,7 @@ export const verifyEmail = async (req, res) => {
 
     await user.save();
 
-    res.status(200).json({
-      status: "success",
-      message: "Email verified successfully! You can now log in.",
-    });
+    res.redirect(`${process.env.FRONTEND_URL}/login?verified=true`);
   } catch (error) {
     console.log("Email Verification Error:", error);
     res.status(500).json({ message: error.message });
