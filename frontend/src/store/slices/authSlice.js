@@ -1,45 +1,30 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-// 1. Check if there is a user already saved in the browser's memory
-// This ensures that if the user refresh the page, user stays logged in!
-const userFromStorage = localStorage.getItem("user")
-  ? JSON.parse(localStorage.getItem("user"))
-  : null;
-
-const initialState = {
-  user: userFromStorage,
-  loading: false,
-  error: null,
-};
-
 const authSlice = createSlice({
   name: "auth",
-  initialState,
-  // 2. Reducers are the "Actions" that change the state
+  initialState: {
+    // Check if user is already logged in when the app starts
+    user: JSON.parse(localStorage.getItem("user")) || null,
+    token: localStorage.getItem("token") || null,
+  },
   reducers: {
-    loginStart: (state) => {
-      state.loading = true;
-      state.error = null;
+    // Call this after successful Login or Google Auth
+    setCredentials: (state, action) => {
+      const { user, token } = action.payload;
+      state.user = user;
+      state.token = token;
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
     },
-    loginSuccess: (state, action) => {
-      state.loading = false;
-      state.user = action.payload; // action.payload is the user data from backend
-      state.error = null;
-    },
-    loginFailure: (state, action) => {
-      state.loading = false;
-      state.error = action.payload; // action.payload is the error message
-    },
+    // Call this to clear everything
     logout: (state) => {
       state.user = null;
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      state.token = null;
+      localStorage.clear();
     },
   },
 });
 
-// Export the actions so it can be used in the components
-export const { loginStart, loginSuccess, loginFailure, logout } =
-  authSlice.actions;
-
+export const { setCredentials, logout } = authSlice.actions;
 export default authSlice.reducer;

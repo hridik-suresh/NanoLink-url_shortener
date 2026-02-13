@@ -3,7 +3,8 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Register from "./pages/Register";
-import Login from "./pages/Login";
+// import Login from "./pages/Login";
+// import SocialAuth from "./pages/SocialAuth";
 import Dashboard from "./pages/Dashboard";
 
 function App() {
@@ -17,8 +18,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/social-auth" element={<SocialAuth />} />
+            {/* <Route path="/login" element={<Login />} /> */}
+            {/* <Route path="/social-auth" element={<SocialAuth />} /> */}
             <Route path="/dashboard" element={<Dashboard />} />
 
             {/* Fallback for 404 */}

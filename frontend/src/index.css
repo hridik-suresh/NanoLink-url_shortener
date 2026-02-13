@@ -1,27 +1,32 @@
 @import "tailwindcss";
 
 @theme {
-    /* Brand Colors */
-    --color-primary: #3b82f6; /* Vibrant Blue */
-    --color-primary-dark: #1d4ed8;
-    --color-secondary: #6366f1; /* Indigo */
+    /* The "NanoLink" Brand Identity */
+    --color-primary: #2563eb;
+    --color-primary-dark: #1e40af;
+    --color-secondary: #4f46e5;
 
-    /* Background Colors */
-    --color-bg-main: #0f172a; /* Deep Slate (Dark Mode) */
-    --color-bg-card: #1e293b; /* Lighter Slate for cards */
+    /* Backgrounds */
+    --color-bg-main: #f8fafc;
+    --color-bg-card: #ffffff;
 
-    /* Accent Colors */
-    --color-accent: #10b981; /* Emerald Green for success/verify */
-    --color-danger: #ef4444; /* Red for errors/delete */
+    /* Text */
+    --color-text-main: #0f172a;
+    --color-text-muted: #64748b;
 
-    /* Border Radius */
-    --radius-xl: 1rem;
-    --radius-2xl: 1.5rem;
+    /* Accents */
+    --color-accent: #10b981;
+    --color-danger: #ef4444;
+    --color-border: #e2e8f0;
 }
 
-/* Base Styles (Optional) */
 @layer base {
     body {
-        @apply bg-bg-main text-white antialiased;
+        @apply bg-bg-main text-text-main antialiased;
+    }
+
+    /* This makes our inputs look professional by default */
+    input {
+        @apply bg-white border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 w-full;
     }
 }
