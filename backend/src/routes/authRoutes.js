@@ -11,6 +11,8 @@ import { signToken } from "../controllers/authController.js";
 
 const router = express.Router();
 
+const frontendURL = process.env.FRONTEND_URL;
+
 // 1. Regular email/password routes
 // POST /api/auth/register
 router.post("/register", register);
@@ -44,7 +46,7 @@ router.get(
   "/google/callback",
   passport.authenticate("google", {
     session: false,
-    failureRedirect: "/login",
+    failureRedirect: `${process.env.FRONTEND_URL}/login?error=oauth_failed`,
   }),
   (req, res) => {
     // If we reach here, Google login was successful!
@@ -53,16 +55,8 @@ router.get(
     // Create a JWT for this user just like we do in regular login
     const token = signToken(req.user._id);
 
-    // Send the token and user info as JSON response
-    res.status(200).json({
-      status: "success",
-      token,
-      user: {
-        id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-      },
-    });
+    // Redirect the user to the frontend with the token in the query string
+    res.redirect(`${frontendURL}/social-auth?token=${token}`);
   },
 );
 

@@ -18,6 +18,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/social-auth" element={<SocialAuth />} />
             <Route path="/dashboard" element={<Dashboard />} />
 
             {/* Fallback for 404 */}
