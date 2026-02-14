@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import SocialAuth from "./pages/SocialAuth";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
@@ -26,7 +27,7 @@ function App() {
               path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <div className="p-10 text-center">Dashboard Coming Soon!</div>
+                  <Dashboard />
                 </ProtectedRoute>
               }
             />
