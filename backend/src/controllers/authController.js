@@ -143,7 +143,12 @@ export const login = async (req, res) => {
     res.status(200).json({
       success: true,
       token: signToken(user._id),
-      user: { id: user._id, name: user.name, email: user.email },
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+      },
     });
   } catch (error) {
     console.log("Login Error:", error);
@@ -262,5 +267,33 @@ export const resetPassword = async (req, res) => {
     console.log("Reset Password Error:", error);
 
     res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get current logged-in user details
+// @route   GET /api/auth/me
+// @access  Private
+export const getMe = async (req, res) => {
+  try {
+    // req.user is already available because this route will use the 'protect' middleware
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar, // This ensures the Google or UI-Avatar shows up!
+        isVerified: user.isVerified,
+      },
+    });
+  } catch (error) {
+    console.error("GetMe Error:", error);
+    res.status(500).json({ message: "Server Error fetching user data" });
   }
 };

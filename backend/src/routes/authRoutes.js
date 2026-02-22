@@ -5,6 +5,7 @@ import {
   forgotPassword,
   resetPassword,
   verifyEmail,
+  getMe,
 } from "../controllers/authController.js";
 import passport from "passport";
 import { signToken } from "../controllers/authController.js";
@@ -59,5 +60,9 @@ router.get(
     res.redirect(`${frontendURL}/social-auth?token=${token}`);
   },
 );
+
+// 7. Protected route to get current user info
+// GET /api/auth/me
+router.get("/me", protect, getMe);
 
 export default router;
