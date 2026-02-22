@@ -9,6 +9,7 @@ import {
 } from "../controllers/authController.js";
 import passport from "passport";
 import { signToken } from "../controllers/authController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
