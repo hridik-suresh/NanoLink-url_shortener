@@ -30,7 +30,7 @@ router.post("/login", login);
 // 4. Password reset routes
 // POST /api/auth/forgot-password
 router.post("/forgot-password", forgotPassword);
-// POST /api/auth/reset-password/:token
+// PATCH /api/auth/reset-password/:token
 router.patch("/reset-password/:token", resetPassword);
 
 // 5.START GOOGLE AUTH
