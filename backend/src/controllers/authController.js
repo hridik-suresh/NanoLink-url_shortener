@@ -49,7 +49,7 @@ export const register = async (req, res) => {
     });
 
     // 3. Construct the Verification URL
-    const verificationURL = `${req.protocol}://${req.get("host")}/api/auth/verify-email/${verificationToken}`;
+    const verificationURL = `${process.env.BASE_URL}/api/auth/verify-email/${verificationToken}`;
 
     const message = `Welcome to NanoLink, ${name}!\n\nPlease verify your email by clicking the link: ${verificationURL}`;
 
