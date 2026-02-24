@@ -17,11 +17,20 @@ const PORT = process.env.PORT || 8080;
 connectDB();
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL, // CORS configuration to allow requests from the frontend
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use(passport.initialize());
 
 // Routes-----------------
+
+app.get("/", (req, res) => {
+  res.send("Welcome to the URL Shortener API");
+});
 
 //  Auth Routes
 app.use("/api/auth", authRoutes);
