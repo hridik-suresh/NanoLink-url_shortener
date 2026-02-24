@@ -180,7 +180,9 @@ export const redirectUrl = async (req, res) => {
       const ip =
         req.headers["x-forwarded-for"]?.split(",")[0] ||
         req.socket.remoteAddress;
-      const geo = geoip.lookup(ip); // This will give us country and city info based on the IP address
+
+      const lookupIp = ip === "::1" || ip === "127.0.0.1" ? "8.8.8.8" : ip; // Handle localhost IP for geo lookup by using a public IP as fallback
+      const geo = geoip.lookup(lookupIp); // This will give us country and city info based on the IP address
 
       // 4. Save analytics (Background task)
       Analytics.create({
