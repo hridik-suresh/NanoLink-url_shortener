@@ -10,7 +10,7 @@ const router = express.Router();
 // GET /api/analytics/dashboard
 router.get("/dashboard", protect, getUserDashboardStats);
 
-// GET /api/analytics/url/:id
+// GET /api/analytics/url/:urlId
 router.get("/url/:urlId", protect, getSingleUrlAnalytics);
 
 export default router;

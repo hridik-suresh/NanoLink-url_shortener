@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Url from "../models/Url.js";
 import Analytics from "../models/Analytics.js";
 
@@ -76,29 +77,42 @@ export const getUserDashboardStats = async (req, res) => {
   }
 };
 
-// @desc    Get detailed analytics for a single URL-----------------------------------------------
+// @desc    Get detailed analytics for a single URL with paginated click history
 // @route   GET /api/analytics/url/:urlId
 export const getSingleUrlAnalytics = async (req, res) => {
   try {
     const { urlId } = req.params;
     const userId = req.user._id;
 
-    // 1. Verify the URL exists and belongs to the user
+    // 1. Pagination Params
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Validate if the ID is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(urlId)) {
+      return res.status(400).json({ message: "Invalid URL ID format" });
+    }
+
+    // 2. Verify URL Ownership
     const url = await Url.findOne({ _id: urlId, user: userId });
     if (!url) {
       return res.status(404).json({ message: "URL not found or unauthorized" });
     }
 
-    // 2. Fetch last 5 clicks for the "Recent Activity" table
-    const recentClicks = await Analytics.find({ urlId })
-      .sort({ createdAt: -1 })
-      .limit(5);
+    // 3. Get Total Count for Pagination metadata
+    const totalClicks = await Analytics.countDocuments({ urlId });
 
-    // 3. Aggregate Clicks by Date (Last 7 Days) for a Chart
+    // 4. Fetch Paginated Analytics
+    const allClicks = await Analytics.find({ urlId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    // 5. Aggregate Clicks for Chart (Last 7 Days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const clickHistory = await Analytics.aggregate([
+    const chartHistory = await Analytics.aggregate([
       {
         $match: {
           urlId: new mongoose.Types.ObjectId(urlId),
@@ -111,16 +125,22 @@ export const getSingleUrlAnalytics = async (req, res) => {
           clicks: { $sum: 1 },
         },
       },
-      { $sort: { _id: 1 } }, // Sort by date ascending
+      { $sort: { _id: 1 } },
     ]);
 
-    // 4. Structure the Response
+    // 6. Response with Metadata
     res.status(200).json({
       success: true,
       data: {
         urlDetails: url,
-        recentClicks,
-        clickHistory, // Array of { _id: "2024-05-20", clicks: 5 }
+        clickHistory: chartHistory, // For the chart
+        analytics: allClicks, // Paginated list for the table
+        pagination: {
+          totalClicks,
+          currentPage: page,
+          totalPages: Math.ceil(totalClicks / limit),
+          hasNextPage: skip + allClicks.length < totalClicks,
+        },
       },
     });
   } catch (error) {
