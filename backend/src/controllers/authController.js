@@ -67,9 +67,9 @@ export const register = async (req, res) => {
           "Registration successful! Please check your email to verify your account.",
       });
     } catch (err) {
-      console.log(err);
+      console.log("EMAIL ERROR:", err);
 
-      // Cleanup: If email fails, delete the user so they can try again
+      // If email fails, delete the user we just created (since they can't verify)
       await User.findByIdAndDelete(user._id);
       return res.status(500).json({
         message: "Error sending verification email. Please try again.",

@@ -3,7 +3,6 @@ import nodemailer from "nodemailer";
 const sendEmail = async (options) => {
   // 1. "transporter" (The Postman)
   const transporter = nodemailer.createTransport({
-    service: "gmail",
     host: "smtp.gmail.com",
     port: 587,
     secure: false, // true for 465, false for other ports
