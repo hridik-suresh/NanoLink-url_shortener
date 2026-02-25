@@ -3,10 +3,9 @@ import nodemailer from "nodemailer";
 const sendEmail = async (options) => {
   // 1. "transporter" (The Postman)
   const transporter = nodemailer.createTransport({
-    // Using host instead of 'service' gives more control for production
     host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // true for port 465
+    port: 587,
+    secure: false, // true for 465, false for other ports
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
