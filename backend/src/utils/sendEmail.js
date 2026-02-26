@@ -1,35 +1,49 @@
-import nodemailer from "nodemailer";
+import { google } from "googleapis";
+
+const oAuth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID_O,
+  process.env.GOOGLE_CLIENT_SECRET_O,
+  "https://developers.google.com/oauthplayground",
+);
+
+// Set the refresh token we just generated
+oAuth2Client.setCredentials({
+  refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+});
 
 const sendEmail = async (options) => {
-  // 1. "transporter" (The Postman)
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // true for 465, false for other ports
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    // This helps bypass certificate issues common in cloud environments
-    tls: {
-      rejectUnauthorized: false,
-    },
-  });
+  try {
+    const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
 
-  // 2. Define the email options (The Envelope)
-  const mailOptions = {
-    from: `NanoLink Support <${process.env.EMAIL_USER}>`,
-    to: options.email,
-    subject: options.subject,
-    text: options.message,
-    html: `<div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee;">
-            <h2>NanoLink Email Verification</h2>
-            <p>${options.message.replace(/\n/g, "<br>")}</p>
-           </div>`,
-  };
+    // Format the email (Base64 encoding is required by Gmail API)
+    const utf8Subject = `=?utf-8?B?${Buffer.from(options.subject).toString("base64")}?=`;
+    const messageParts = [
+      `To: ${options.email}`,
+      `From: NanoLink <${process.env.GOOGLE_EMAIL}>`,
+      "Content-Type: text/html; charset=utf-8",
+      "MIME-Version: 1.0",
+      `Subject: ${utf8Subject}`,
+      "",
+      options.message,
+    ];
+    const message = messageParts.join("\n");
 
-  // 3. Sends the email
-  await transporter.sendMail(mailOptions);
+    const encodedMessage = Buffer.from(message)
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+
+    await gmail.users.messages.send({
+      userId: "me",
+      requestBody: { raw: encodedMessage },
+    });
+
+    console.log("Email sent successfully!");
+  } catch (error) {
+    console.error("Gmail API Error:", error);
+    throw error;
+  }
 };
 
 export default sendEmail;
