@@ -6,7 +6,7 @@ const oAuth2Client = new google.auth.OAuth2(
   "https://developers.google.com/oauthplayground",
 );
 
-// Set the refresh token we just generated
+// Set the refresh token for the OAuth2 client
 oAuth2Client.setCredentials({
   refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
 });
@@ -15,7 +15,7 @@ const sendEmail = async (options) => {
   try {
     const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
 
-    // Format the email (Base64 encoding is required by Gmail API)
+    // Format the email 
     const utf8Subject = `=?utf-8?B?${Buffer.from(options.subject).toString("base64")}?=`;
     const messageParts = [
       `To: ${options.email}`,
@@ -39,7 +39,7 @@ const sendEmail = async (options) => {
       requestBody: { raw: encodedMessage },
     });
 
-    console.log("Email sent successfully!");
+    // console.log("Email sent successfully!");
   } catch (error) {
     console.error("Gmail API Error:", error);
     throw error;
